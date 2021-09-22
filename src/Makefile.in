@@ -1,0 +1,50 @@
+CC			= @CC@
+CFLAGS		= -Wall -O0 -g
+LINKERFLAGS	= -lpthread
+SRCDIR		= ../src
+DESTBIN		= a.out
+SOURCES		= ${wildcard ${SRCDIR}/*.c}
+# Each .c file has it's own compile object
+OBJS		= ${SOURCES:.c=.o}
+# Each .c file has a .d dependency
+DEPS		= ${SOURCES:.c=.d}
+
+# Include each .d file in the src/ file tree
+
+include ${DEPS}
+
+.PHONY: all build
+
+all: build
+
+build: queue.o
+	${CC} -o ${DESTBIN}			\
+		${SRCDIR}/queue.o       \
+		${LINKERFLAGS}
+
+queue.o:	queue.d
+	cd ${SRCDIR} &&				\
+		${CC} -c -o queue.o	\
+		queue.c ${CCFLAGS};
+
+error_wrappers.o:	error_wrappers.d
+	cd ${SRCDIR} &&				\
+		${CC} -c -o error_wrappers.o	\
+		error_wrappers.c ${CCFLAGS};
+
+test.o:
+	cd ${SRCDIR} &&				\
+		${CC} -c -o test.o		\
+		test.c ${CCFLAGS};
+
+event_plus_curl.o:
+	cd ${SRCDIR} &&				\
+		${CC} -c -o event_plus_curl.o	\
+		event_plus_curl.c ${CCFLAGS}
+
+main.o:			${SRCDIR}/main.h	\
+			${SRCDIR}/main.c
+	cd ${SRCDIR} &&				\
+		${CC} -c -o main.o		\
+		main.c ${CCFLAGS}
+
