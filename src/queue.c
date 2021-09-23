@@ -7,20 +7,18 @@
 #include <string.h>
 #include <errno.h>
 #include <unistd.h>
+#include <stdbool.h>
 
 #include "queue.h"
 
-//
-// Function: queue_init
-//
-// Initialize a queue.
-//
-// Parameters:
-//     q - pointer to the queue to initialize
-//
-// Returns:
-//     0 on success, -1 on failure
-//
+/**
+ * @brief Initialize a queue
+ * @param q pointer to the queue to initialize
+ * @return 0 on success, -1 on failure
+ * @note This function is not thread-safe if the pointer q is being
+ * used by another thread.
+ */
+
 int queue_init(queue_t *q)
 {
     if (q == NULL)
@@ -32,6 +30,8 @@ int queue_init(queue_t *q)
     q->head = NULL;
     q->tail = NULL;
     q->size = 0;
+    q->mutex = (pthread_mutex_t)PTHREAD_MUTEX_INITIALIZER;
+    q->cond = (pthread_cond_t)PTHREAD_COND_INITIALIZER;
 
     pthread_mutex_init(&q->mutex, NULL);
     pthread_cond_init(&q->cond, NULL);
@@ -39,14 +39,12 @@ int queue_init(queue_t *q)
     return 0;
 }
 
-//
-// Function: queue_create
-//
-// Create a queue.
-//
-// Returns:
-//     pointer of the created queue on success, NULL on failure
-//
+/**
+ * @brief Create a queue
+ * @return 0 on success, -1 on failure
+ * @note This function is thread safe
+ */
+
 queue_t *queue_create()
 {
     queue_t *q = malloc(sizeof(queue_t));
@@ -64,43 +62,19 @@ queue_t *queue_create()
     return q;
 }
 
-//
-// Function: queue_destroy
-//
-// Destroy a queue.
-//
-// Parameters:
-//     q - pointer to the queue to destroy
-//
-// Returns:
-//     0 on success, -1 on failure
-//
-int queue_destroy(queue_t *q)
-{
-    if (q == NULL)
-    {
-        errno = EINVAL;
-        return -1;
-    }
+/**
+ * @brief Push an item onto the tail of the queue.
+ * @param q - the queue
+ * @param item - the item to push onto the queue
+ * @return 0 on success, -1 on failure
+ * @note
+ *    This function is thread-safe.
+ *    The mutex is locked before pushing the item.
+ *    The mutex is unlocked after pushing the item.
+ *    The cond is signaled after pushing the item to wake up the waiting thread.
+ * 
+ */
 
-    pthread_mutex_destroy(&q->mutex);
-    pthread_cond_destroy(&q->cond);
-
-    return 0;
-}
-
-//
-// Function: queue_push
-//
-// Push an item onto the tail of the queue.
-//
-// Parameters:
-//     q - pointer to the queue
-//     item - pointer to the item to push
-//
-// Returns:
-//     0 on success, -1 on failure
-//
 int queue_push(queue_t *q, void *item)
 {
     if (q == NULL)
@@ -142,18 +116,14 @@ int queue_push(queue_t *q, void *item)
     return 0;
 }
 
-//
-// Function: queue_pop
-//
-// Pop an item from the head of the queue.
-//
-// Parameters:
-//     q - pointer to the queue
-//     item - pointer to a pointer to store the item
-//
-// Returns:
-//     0 on success, -1 on failure
-//
+/**
+ * @brief Pop an item from the head of the queue.
+ * @param q - the queue
+ * @param item - pointer to a pointer to store the item
+ * @return 0 on success, -1 on failure
+ * @note This function is thread-safe.
+ */
+
 int queue_pop(queue_t *q, void **item)
 {
     if (q == NULL)
@@ -191,17 +161,13 @@ int queue_pop(queue_t *q, void **item)
     return 0;
 }
 
-//
-// Function: queue_size
-//
-// Get the size of the queue.
-//
-// Parameters:
-//     q - pointer to the queue
-//
-// Returns:
-//     the size of the queue
-//
+/**
+ * @brief Get the size of the queue.
+ * @param q - pointer to the queue
+ * @return the size of the queue
+ * @note this function is thread-safe
+ */
+
 int queue_size(queue_t *q)
 {
     if (q == NULL)
@@ -222,9 +188,17 @@ int queue_size(queue_t *q)
 //     q - pointer to the queue
 //
 // Returns:
-//     1 if the queue is empty, 0 otherwise
+//     true if the queue is empty, false otherwise
 //
-int queue_is_empty(queue_t *q)
+
+/**
+ * @brief Check if the queue is empty
+ * @param q - pointer to the queue
+ * @return true if the queue is empty, false otherwise
+ * @note This function is thread-safe
+ */
+
+bool queue_is_empty(queue_t *q)
 {
     if (q == NULL)
     {
@@ -235,17 +209,13 @@ int queue_is_empty(queue_t *q)
     return (q->size == 0);
 }
 
-//
-// Function: empty_queue
-//
-// Empty the queue and frees all the memory allocated to the queue.
-//
-// Parameters:
-//     q - pointer to the queue
-//
-// Returns:
-//     0 on success, -1 on failure
-//
+/**
+ * @brief Empty the queue and frees all the memory allocated to the queue.
+ * @param q - pointer to the queue
+ * @return 0 on success, -1 on failure
+ * @note This function is thread-safe
+ */
+
 int empty_queue(queue_t *q)
 {
     if (q == NULL)
@@ -273,17 +243,13 @@ int empty_queue(queue_t *q)
     return 0;
 }
 
-//
-// Function: queue_destroy
-//
-// Destroy a queue.
-//
-// Parameters:
-//     q - pointer to the queue to destroy
-//
-// Returns:
-//     0 on success, -1 on failure
-//
+/**
+ * @brief Destroy a queue
+ * @param q - pointer to the queue to destroy
+ * @return 0 on success, -1 on failure
+ * @note This function is NOT thread-safe
+ */
+
 int queue_destroy(queue_t *q)
 {
     if (q == NULL)
@@ -298,18 +264,13 @@ int queue_destroy(queue_t *q)
     return 0;
 }
 
-//
-// Function: queue_delete
-//
-// Free the entire queue using empty_queue and destroy it.
-//
-// Parameters:
-//     q - pointer to the queue
-//     item - pointer to the item to delete
-//
-// Returns:
-//     0 on success, -1 on failure
-//
+/**
+ * @brief Delete a queue
+ * @param q - pointer to the queue to delete
+ * @return 0 on success, -1 on failure
+ * @note This function is NOT thread-safe
+ */
+
 int queue_delete(queue_t *q)
 {
     if (q == NULL)

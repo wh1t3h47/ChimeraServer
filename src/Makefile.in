@@ -8,6 +8,12 @@ SOURCES		= ${wildcard ${SRCDIR}/*.c}
 OBJS		= ${SOURCES:.c=.o}
 # Each .c file has a .d dependency
 DEPS		= ${SOURCES:.c=.d}
+%.o : %.c %.d
+		@$(MAKEDEPEND)
+		$(COMPILE.c) -o $@ $<
+
+%.d: ;
+include $(wildcard $(SRCS:.c=.d))
 
 # Include each .d file in the src/ file tree
 

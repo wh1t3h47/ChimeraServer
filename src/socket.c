@@ -3,17 +3,11 @@
 #include <stdlib.h>
 #include <string.h>
 
-//
-// Function: create_socket
-//
-// create a socket, bind it and listen for connections
-//
-// Parameters:
-//     port - the port to listen on
-//
-// Returns:
-//     the socket file descriptor
-//
+/**
+ * @brief create_socket
+ * @param port the port to listen on
+ * @return the socket file descriptor
+ */
 
 int create_socket(int port) {
     int sockfd;

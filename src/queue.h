@@ -1,7 +1,7 @@
 typedef struct queue {
     int size;
-    int head;
-    int tail;
+    void *head;
+    void *tail;
     int *array;
     // thread related stuff
     pthread_mutex_t mutex;
@@ -33,7 +33,7 @@ int queue_dequeue(queue_t *queue);
 int queue_front(queue_t *queue);
 int queue_rear(queue_t *queue);
 int queue_size(queue_t *queue);
-int queue_is_empty(queue_t *queue);
+bool queue_is_empty(queue_t *queue);
 int queue_is_full(queue_t *queue);
 void queue_print(queue_t *queue);
 
