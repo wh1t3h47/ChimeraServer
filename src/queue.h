@@ -1,3 +1,5 @@
+#ifndef __QUEUE_H__
+#define __QUEUE_H__
 typedef struct queue {
     int size;
     void *head;
@@ -37,3 +39,4 @@ bool queue_is_empty(queue_t *queue);
 int queue_is_full(queue_t *queue);
 void queue_print(queue_t *queue);
 
+#endif

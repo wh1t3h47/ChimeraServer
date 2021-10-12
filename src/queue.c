@@ -122,6 +122,7 @@ int queue_push(queue_t *q, void *item)
  * @param item - pointer to a pointer to store the item
  * @return 0 on success, -1 on failure
  * @note This function is thread-safe.
+ * @note Item needs to be freed by the caller.
  */
 
 int queue_pop(queue_t *q, void **item)
